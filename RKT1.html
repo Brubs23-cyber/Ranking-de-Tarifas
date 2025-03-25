@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ranking de Tarifas</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #102a43;
+            color: #d9e2ec;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 95%;
+            max-width: 1200px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        header {
+            background-color: #243b55;
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            width: 100%;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            color: #d9e2ec;
+        }
+
+        p {
+            font-size: 1rem;
+            color: #bcccdc;
+        }
+
+        .table-container {
+            width: 100%;
+            overflow-x: auto;
+            max-height: 500px;
+            border: 1px solid #3e5c76;
+            border-radius: 8px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: #1c3d5a;
+            color: #d9e2ec;
+            table-layout: auto;
+        }
+
+        th, td {
+            padding: 12px;
+            border: 1px solid #3e5c76;
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        th {
+            background-color: #2b4c7e;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        tr:nth-child(even) {
+            background-color: #334e68;
+        }
+
+        tr:hover {
+            background-color: #486581;
+        }
+
+        .export-button {
+            margin: 20px 0;
+            padding: 10px 20px;
+            background-color: #2b4c7e;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            font-size: 1rem;
+        }
+
+        .export-button:hover {
+            background-color: #486581;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                width: 98%;
+                padding: 0 10px;
+            }
+
+            table {
+                font-size: 0.9rem;
+            }
+
+            th, td {
+                padding: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Ranking de Tarifas de Energia</h1>
+            <p>Visualize as tarifas de energia de todas as concessionárias do Brasil</p>
+        </header>
+
+        <button onclick="exportTableToExcel()" class="export-button">
+            Exportar para Excel
+        </button>
+
+        <div class="table-container">
+            <table id="rankingTable">
+                <thead>
+                    <tr id="tableHeader"></tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+             const data = [
+  {
+    "Distribuidora": "Equatorial PA",
+    "Estado": "Para",
+    "Região": "NORTE",
+    "Sigla": "N",
+    "Soma de Tarifa Branca - Fora ponta": 0.74163,
+    "Soma de Tarifa Branca - Intermediária": 1.30537,
+    "Soma de Tarifa Branca - Ponta": 2.0287,
+    "Soma de Tarifa Convencional": 0.93845,
+    "Efeito Médio Consumidor": 0.,
+    "UF": "PA"
+  },
+  {
+    "Distribuidora": "Energisa TO",
+    "Estado": "Tocantins",
+    "Região": "NORTE",
+    "Sigla": "N",
+    "Soma de Tarifa Branca - Fora ponta": 0.64767,
+    "Soma de Tarifa Branca - Intermediária": 1.22437,
+    "Soma de Tarifa Branca - Ponta": 1.95892,
+    "Soma de Tarifa Convencional": 0.82302,
+     "Efeito Médio Consumidor": 0.,
+    "UF": "TO"
+  },
+  {
+    "Distribuidora": "Enel RJ",
+    "Estado": "Rio de Janeiro",
+    "Região": "SUDESTE",
+    "Sigla": "SE",
+    "Soma de Tarifa Branca - Fora ponta": 0.75424,
+    "Soma de Tarifa Branca - Intermediária": 1.27519,
+    "Soma de Tarifa Branca - Ponta": 1.94153,
+    "Soma de Tarifa Convencional": 0.91287,
+     "Efeito Médio Consumidor": 0.,
+    "UF": "RJ"
+  },
+  {
+    "Distribuidora": "Equatorial PI",
+    "Estado": "Piaui",
+    "Região": "NORDESTE",
+    "Sigla": "NE",
+    "Soma de Tarifa Branca - Fora ponta": 0.69029,
+    "Soma de Tarifa Branca - Intermediária": 1.22404,
+    "Soma de Tarifa Branca - Ponta": 1.91755,
+    "Soma de Tarifa Convencional": 0.85373,
+     "Efeito Médio Consumidor": 0.,
+    "UF": "PI"
+  },
+  {
+    "Distribuidora": "Equatorial AL",
+    "Estado": "Alagoas",
+    "Região": "NORDESTE",
+    "Sigla": "NE",
+    "Soma de Tarifa Branca - Fora ponta": 0.70802,
+    "Soma de Tarifa Branca - Intermediária": 1.18714,
+    "Soma de Tarifa Branca - Ponta": 1.83679,
+    "Soma de Tarifa Convencional": 0.86293,
+     "Efeito Médio Consumidor": 0.,
+    "UF": "AL"
+  },
+  {
+    "Distribuidora": "Energisa AC",
+    "Estado": "Acre",
+    "Região": "NORTE",
+    "Sigla": "N",
+    "Soma de Tarifa Branca - Fora ponta": 0.6703,
+    "Soma de Tarifa Branca - Intermediária": 1.16087,
+    "Soma de Tarifa Branca - Ponta": 1.81714,
+    "Soma de Tarifa Convencional": 0.82816,
+     "Efeito Médio Consumidor": 0.,
+    "UF": "AC"
+  },
+  {
+    "Distribuidora": "Neoenergia Brasília",
+    "Estado": "Distrito Federal",
+    "Região": "CENTRO OESTE",
+    "Sigla": "CO",
+    "Soma de Tarifa Branca - Fora ponta": 0.63109,
+    "Soma de Tarifa Branca - Intermediária": 1.07807,
+    "Soma de Tarifa Branca - Ponta": 1.69326,
+    "Soma de Tarifa Convencional": 0.74336,
+     "Efeito Médio Consumidor": 0.,
+    "UF": "DF"
+  },
+  {
+    "Distribuidora": "Energisa MT",
+    "Estado": "Mato Grosso",
+    "Região": "CENTRO OESTE",
+    "Sigla": "CO",
+    "Soma de Tarifa Branca - Fora ponta": 0.69749,
+    "Soma de Tarifa Branca - Intermediária": 1.10054,
+    "Soma de Tarifa Branca - Ponta": 1.69074,
+    "Soma de Tarifa Convencional": 0.84743,
+     "Efeito Médio Consumidor": 0.,
+    "UF": "MT"
+  },
+  {
+    "Distribuidora": "Energisa MS",
+    "Estado": "Mato Grosso do Sul",
+    "Região": "CENTRO OESTE",
+    "Sigla": "CO",
+    "Soma de Tarifa Branca - Fora ponta": 0.67113,
+    "Soma de Tarifa Branca - Intermediária": 1.07092,
+    "Soma de Tarifa Branca - Ponta": 1.64504,
+    "Soma de Tarifa Convencional": 0.87017,
+     "Efeito Médio Consumidor": 0.,
+    "UF": "MS"
+  },
+  {
+    "Distribuidora": "Cocel",
+    "Estado": "Parana",
+    "Região": "SUL",
+    "Sigla": "S",
+    "Soma de Tarifa Branca - Fora ponta": 0.35015,
+    "Soma de Tarifa Branca - Intermediária": 0.6004,
+    "Soma de Tarifa Branca - Ponta": 1.64068,
+    "Soma de Tarifa Convencional": 0.52779,
+     "Efeito Médio Consumidor": 0.,
+    "UF": "PR"
+  },
+  {
+    "Distribuidora": "Enel CE",
+    "Estado": "Ceara",
+    "Região": "NORDESTE",
+    "Sigla": "NE",
+    "Soma de Tarifa Branca - Fora ponta": 0.59801,
+    "Soma de Tarifa Branca - Intermediária": 1.03227,
+    "Soma de Tarifa Branca - Ponta": 1.6145,
+    "Soma de Tarifa Convencional": 0.7222,
+     "Efeito Médio Consumidor": 0.,
+    "UF": "CE"
+  },
+  {
+    "Distribuidora": "Neoenergia Coelba",
+    "Estado": "Bahia",
+    "Região": "NORDESTE",
+    "Sigla": "NE",
+    "Soma de Tarifa Branca - Fora ponta": 0.6222,
+    "Soma de Tarifa Branca - Intermediária": 1.01371,
+    "Soma de Tarifa Branca - Ponta": 1.60368,
+    "Soma de Tarifa Convencional": 0.8207,
+     "Efeito Médio Consumidor": 0.,
+    "UF": "BA"
+  },
+  {
+    "Distribuidora": "Equatorial MA",
+    "Estado": "Maranhao",
+    "Região": "NORDESTE",
+    "Sigla": "NE",
+    "Soma de Tarifa Branca - Fora ponta": 0.57891,
+    "Soma de Tarifa Branca - Intermediária": 1.01266,
+    "Soma de Tarifa Branca - Ponta": 1.5968,
+    "Soma de Tarifa Convencional": 0.71081,
+     "Efeito Médio Consumidor": 0.,
+    "UF": "MA"
+  },
+  {
+    "Distribuidora": "Cemig-D",
+    "Estado": "Minas Gerais",
+    "Região": "SUDESTE",
+    "Sigla": "SE",
+    "Soma de Tarifa Branca - Fora ponta": 0.65499,
+    "Soma de Tarifa Branca - Intermediária": 1.03052,
+    "Soma de Tarifa Branca - Ponta": 1.57676,
+    "Soma de Tarifa Convencional": 0.79969,
+     "Efeito Médio Consumidor": 0.,
+    "UF": "MG"
+  },
+  {
+    "Distribuidora": "Light",
+    "Estado": "Rio de Janeiro",
+    "Região": "SUDESTE",
+    "Sigla": "SE",
+    "Soma de Tarifa Branca - Fora ponta": 0.73926,
+    "Soma de Tarifa Branca - Intermediária": 1.06261,
+    "Soma de Tarifa Branca - Ponta": 1.57087,
+    "Soma de Tarifa Convencional": 0.84173,
+     "Efeito Médio Consumidor": 0.,
+    "UF": "RJ"
+  },
+  {
+    "Distribuidora": "Energisa RO",
+    "Estado": "Rondonia",
+    "Região": "NORTE",
+    "Sigla": "N",
+    "Soma de Tarifa Branca - Fora ponta": 0.57825,
+    "Soma de Tarifa Branca - Intermediária": 1.00735,
+    "Soma de Tarifa Branca - Ponta": 1.56202,
+    "Soma de Tarifa Convencional": 0.7094,
+     "Efeito Médio Consumidor": 0.,
+    "UF": "RO"
+  },
+  {
+    "Distribuidora": "Chesp",
+    "Estado": "Goias",
+    "Região": "CENTRO OESTE",
+    "Sigla": "CO",
+    "Soma de Tarifa Branca - Fora ponta": 0.57345,
+    "Soma de Tarifa Branca - Intermediária": 0.99628,
+    "Soma de Tarifa Branca - Ponta": 1.55675,
+    "Soma de Tarifa Convencional": 0.69876,
+     "Efeito Médio Consumidor": 0.,
+    "UF": "GO"
+  },
+  {
+    "Distribuidora": "Neoenergia Elektro",
+    "Estado": "Sao Paulo",
+    "Região": "SUDESTE",
+    "Sigla": "SE",
+    "Soma de Tarifa Branca - Fora ponta": 0.63318,
+    "Soma de Tarifa Branca - Intermediária": 0.98564,
+    "Soma de Tarifa Branca - Ponta": 1.53319,
+    "Soma de Tarifa Convencional": 0.71095,
+     "Efeito Médio Consumidor": 0.,
+    "UF": "SP"
+  },
+  {
+    "Distribuidora": "CEA Amapá",
+    "Estado": "Amapa",
+    "Região": "NORTE",
+    "Sigla": "N",
+    "Soma de Tarifa Branca - Fora ponta": 0.74372,
+    "Soma de Tarifa Branca - Intermediária": 1.0117,
+    "Soma de Tarifa Branca - Ponta": 1.47741,
+    "Soma de Tarifa Convencional": 0.72167,
+     "Efeito Médio Consumidor": 0.,
+    "UF": "AP"
+  },
+  {
+    "Distribuidora": "Sulgipe",
+    "Estado": "Sergipe",
+    "Região": "NORDESTE",
+    "Sigla": "NE",
+    "Soma de Tarifa Branca - Fora ponta": 0.47428,
+    "Soma de Tarifa Branca - Intermediária": 0.844,
+    "Soma de Tarifa Branca - Ponta": 1.44523,
+    "Soma de Tarifa Convencional": 0.66591,
+     "Efeito Médio Consumidor": 0.,
+    "UF": "SE"
+  },
+  {
+    "Distribuidora": "Energisa MG",
+    "Estado": "Minas Gerais",
+    "Região": "SUDESTE",
+    "Sigla": "SE",
+    "Soma de Tarifa Branca - Fora ponta": 0.62649,
+    "Soma de Tarifa Branca - Intermediária": 0.93704,
+    "Soma de Tarifa Branca - Ponta": 1.44134,
+    "Soma de Tarifa Convencional": 0.78036,
+     "Efeito Médio Consumidor": 0.,
+    "UF": "MG"
+  },
+  {
+    "Distribuidora": "Energisa SE",
+    "Estado": "Sergipe",
+    "Região": "NORDESTE",
+    "Sigla": "NE",
+    "Soma de Tarifa Branca - Fora ponta": 0.5411,
+    "Soma de Tarifa Branca - Intermediária": 0.90643,
+    "Soma de Tarifa Branca - Ponta": 1.42592,
+    "Soma de Tarifa Convencional": 0.66591,
+     "Efeito Médio Consumidor": 0.,
+    "UF": "SE"
+  },
+  {
+    "Distribuidora": "Roraima Energia",
+    "Estado": "Roraima",
+    "Região": "NORTE",
+    "Sigla": "N",
+    "Soma de Tarifa Branca - Fora ponta": 0.5411,
+    "Soma de Tarifa Branca - Intermediária": 0.90643,
+    "Soma de Tarifa Branca - Ponta": 1.42592,
+    "Soma de Tarifa Convencional": 0.66061,
+     "Efeito Médio Consumidor": 0.,
+    "UF": "RR"
+  },
+   {
+    "Distribuidora": "Neoenergia PE",
+    "Estado": "Pernambuco",
+    "Região": "NORDESTE",
+    "Sigla": "NE",
+    "Soma de Tarifa Branca - Fora ponta": 0.57061,
+    "Soma de Tarifa Branca - Intermediária": 0.90264,
+    "Soma de Tarifa Branca - Ponta": 1.39208,
+    "Soma de Tarifa Convencional": 0.74432,
+     "Efeito Médio Consumidor": 0.,
+    "UF": "PE"
+  },
+  {
+    "Distribuidora": "Equatorial GO",
+    "Estado": "Goias",
+    "Região": "CENTRO OESTE",
+    "Sigla": "CO",
+    "Soma de Tarifa Branca - Fora ponta": 0.57436,
+    "Soma de Tarifa Branca - Intermediária": 0.90194,
+    "Soma de Tarifa Branca - Ponta": 1.38205,
+    "Soma de Tarifa Convencional": 0.74593,
+     "Efeito Médio Consumidor": 0.,
+    "UF": "GO"
+  },
+  {
+    "Distribuidora": "Nova Palma",
+    "Estado": "Rio Grande do Sul",
+    "Região": "SUL",
+    "Sigla": "S",
+    "Soma de Tarifa Branca - Fora ponta": 0.57672,
+    "Soma de Tarifa Branca - Intermediária": 0.89692,
+    "Soma de Tarifa Branca - Ponta": 1.36447,
+    "Soma de Tarifa Convencional": 0.71956,
+     "Efeito Médio Consumidor": 0.,
+    "UF": "RS"
+  },
+  {
+    "Distribuidora": "Neoenergia Cosern",
+    "Estado": "Rio Grande do Norte",
+    "Região": "NORDESTE",
+    "Sigla": "NE",
+    "Soma de Tarifa Branca - Fora ponta": 0.59959,
+    "Soma de Tarifa Branca - Intermediária": 0.89218,
+    "Soma de Tarifa Branca - Ponta": 1.34816,
+    "Soma de Tarifa Convencional": 0.74414,
+     "Efeito Médio Consumidor": 0.,
+    "UF": "RN"
+  },
+  {
+    "Distribuidora": "ELFSM",
+    "Estado": "Espirito Santo",
+    "Região": "SUDESTE",
+    "Sigla": "SE",
+    "Soma de Tarifa Branca - Fora ponta": 0.56025,
+    "Soma de Tarifa Branca - Intermediária": 0.86798,
+    "Soma de Tarifa Branca - Ponta": 1.34557,
+    "Soma de Tarifa Convencional": 0.6408,
+     "Efeito Médio Consumidor": 0.,
+    "UF": "ES"
+  },
+  {
+    "Distribuidora": "Energisa PB",
+    "Estado": "Paraiba",
+    "Região": "NORDESTE",
+    "Sigla": "NE",
+    "Soma de Tarifa Branca - Fora ponta": 0.49427,
+    "Soma de Tarifa Branca - Intermediária": 0.83691,
+    "Soma de Tarifa Branca - Ponta": 1.31815,
+    "Soma de Tarifa Convencional": 0.58827,
+     "Efeito Médio Consumidor": 0.,
+    "UF": "PB"
+  },
+  {
+    "Distribuidora": "Eletrocar",
+    "Estado": "Rio Grande do Sul",
+    "Região": "SUL",
+    "Sigla": "S",
+    "Soma de Tarifa Branca - Fora ponta": 0.40645,
+    "Soma de Tarifa Branca - Intermediária": 0.75207,
+    "Soma de Tarifa Branca - Ponta": 1.31419,
+    "Soma de Tarifa Convencional": 0.5709,
+     "Efeito Médio Consumidor": 0.,
+    "UF": "RS"
+  },
+  {
+    "Distribuidora": "CPFL Paulista",
+    "Estado": "Sao Paulo",
+    "Região": "SUDESTE",
+    "Sigla": "SE",
+    "Soma de Tarifa Branca - Fora ponta": 0.5835,
+    "Soma de Tarifa Branca - Intermediária": 0.84781,
+    "Soma de Tarifa Branca - Ponta": 1.29226,
+    "Soma de Tarifa Convencional": 0.70235,
+     "Efeito Médio Consumidor": 0.,
+    "UF": "SP"
+  },
+  {
+    "Distribuidora": "CEEE-D Equatorial",
+    "Estado": "Rio Grande do Sul",
+    "Região": "SUL",
+    "Sigla": "S",
+    "Soma de Tarifa Branca - Fora ponta": 0.53828,
+    "Soma de Tarifa Branca - Intermediária": 0.83855,
+    "Soma de Tarifa Branca - Ponta": 1.29182,
+    "Soma de Tarifa Convencional": 0.67404,
+     "Efeito Médio Consumidor": 0.,
+    "UF": "RS"
+  },
+  {
+    "Distribuidora": "MuxEnergia",
+    "Estado": "Rio Grande do Sul",
+    "Região": "SUL",
+    "Sigla": "S",
+    "Soma de Tarifa Branca - Fora ponta": 0.66512,
+    "Soma de Tarifa Branca - Intermediária": 0.85788,
+    "Soma de Tarifa Branca - Ponta": 1.27836,
+    "Soma de Tarifa Convencional": 0.65752,
+     "Efeito Médio Consumidor": 0.,
+    "UF": "RS"
+  },
+  {
+    "Distribuidora": "EDP ES",
+    "Estado": "Espirito Santo",
+    "Região": "SUDESTE",
+    "Sigla": "SE",
+    "Soma de Tarifa Branca - Fora ponta": 0.57139,
+    "Soma de Tarifa Branca - Intermediária": 0.8338,
+    "Soma de Tarifa Branca - Ponta": 1.26546,
+    "Soma de Tarifa Convencional": 0.68447,
+     "Efeito Médio Consumidor": 0.,
+    "UF": "ES"
+  },
+  {
+    "Distribuidora": "EDP SP",
+    "Estado": "Sao Paulo",
+    "Região": "SUDESTE",
+    "Sigla": "SE",
+    "Soma de Tarifa Branca - Fora ponta": 0.56117,
+    "Soma de Tarifa Branca - Intermediária": 0.82858,
+    "Soma de Tarifa Branca - Ponta": 1.25624,
+    "Soma de Tarifa Convencional": 0.67788,
+    "Efeito Médio Consumidor": 0.,
+    "UF": "SP"
+  },
+  {
+    "Distribuidora": "Enel SP",
+    "Estado": "Sao Paulo",
+    "Região": "SUDESTE",
+    "Sigla": "SE",
+    "Soma de Tarifa Branca - Fora ponta": 0.52777,
+    "Soma de Tarifa Branca - Intermediária": 0.81915,
+    "Soma de Tarifa Branca - Ponta": 1.24677,
+    "Soma de Tarifa Convencional": 0.63624,
+    "Efeito Médio Consumidor": 0.,
+    "UF": "SP"
+  },
+  {
+    "Distribuidora": "ESS (agrupada)",
+    "Estado": "Sao Paulo",
+    "Região": "SUDESTE",
+    "Sigla": "SE",
+    "Soma de Tarifa Branca - Fora ponta": 0.52543,
+    "Soma de Tarifa Branca - Intermediária": 0.80238,
+    "Soma de Tarifa Branca - Ponta": 1.23325,
+    "Soma de Tarifa Convencional": 0.62313,
+    "Efeito Médio Consumidor": 0.,
+    "UF": "SP"
+  },
+  {
+    "Distribuidora": "RGE (agrupada)",
+    "Estado": "Rio Grande do Sul",
+    "Região": "SUL",
+    "Sigla": "S",
+    "Soma de Tarifa Branca - Fora ponta": 0.56034,
+    "Soma de Tarifa Branca - Intermediária": 0.78897,
+    "Soma de Tarifa Branca - Ponta": 1.22749,
+    "Soma de Tarifa Convencional": 0.71999,
+    "Efeito Médio Consumidor": 0.,
+    "UF": "RS"
+  },
+  {
+    "Distribuidora": "Demei",
+    "Estado": "Rio Grande do Sul",
+    "Região": "SUL",
+    "Sigla": "S",
+    "Soma de Tarifa Branca - Fora ponta": 0.50228,
+    "Soma de Tarifa Branca - Intermediária": 0.78818,
+    "Soma de Tarifa Branca - Ponta": 1.21957,
+    "Soma de Tarifa Convencional": 0.63617,
+    "Efeito Médio Consumidor": 0.,
+    "UF": "RS"
+  },
+  {
+    "Distribuidora": "CPFL Santa Cruz",
+    "Estado": "Sao Paulo",
+    "Região": "SUDESTE",
+    "Sigla": "SE",
+    "Soma de Tarifa Branca - Fora ponta": 0.53414,
+    "Soma de Tarifa Branca - Intermediária": 0.80448,
+    "Soma de Tarifa Branca - Ponta": 1.21317,
+    "Soma de Tarifa Convencional": 0.67044,
+    "Efeito Médio Consumidor": 0.,
+    "UF": "SP"
+  },
+  {
+    "Distribuidora": "DMED",
+    "Estado": "Minas Gerais",
+    "Região": "SUDESTE",
+    "Sigla": "SE",
+    "Soma de Tarifa Branca - Fora ponta": 0.54769,
+    "Soma de Tarifa Branca - Intermediária": 0.80126,
+    "Soma de Tarifa Branca - Ponta": 1.20429,
+    "Soma de Tarifa Convencional": 0.67257,
+    "Efeito Médio Consumidor": 0.,
+    "UF": "MG"
+  },
+  {
+    "Distribuidora": "CPFL Piratininga",
+    "Estado": "Sao Paulo",
+    "Região": "SUDESTE",
+    "Sigla": "SE",
+    "Soma de Tarifa Branca - Fora ponta": 0.55788,
+    "Soma de Tarifa Branca - Intermediária": 0.78225,
+    "Soma de Tarifa Branca - Ponta": 1.19859,
+    "Soma de Tarifa Convencional": 0.69873,
+    "Efeito Médio Consumidor": 0.,
+    "UF": "SP"
+  },
+  {
+    "Distribuidora": "Hidropan",
+    "Estado": "Rio Grande do Sul",
+    "Região": "SUL",
+    "Sigla": "S",
+    "Soma de Tarifa Branca - Fora ponta": 0.38465,
+    "Soma de Tarifa Branca - Intermediária": 0.67055,
+    "Soma de Tarifa Branca - Ponta": 1.16115,
+    "Soma de Tarifa Convencional": 0.54087,
+    "Efeito Médio Consumidor": 0.,
+    "UF": "RS"
+  },
+  {
+    "Distribuidora": "Copel-DIS",
+    "Estado": "Parana",
+    "Região": "SUL",
+    "Sigla": "S",
+    "Soma de Tarifa Branca - Fora ponta": 0.52281,
+    "Soma de Tarifa Branca - Intermediária": 0.76186,
+    "Soma de Tarifa Branca - Ponta": 1.16026,
+    "Soma de Tarifa Convencional": 0.63001,
+    "Efeito Médio Consumidor": 0.,
+    "UF": "PR"
+  },
+  {
+    "Distribuidora": "Forcel",
+    "Estado": "Parana",
+    "Região": "SUL",
+    "Sigla": "S",
+    "Soma de Tarifa Branca - Fora ponta": 0.53021,
+    "Soma de Tarifa Branca - Intermediária": 0.75082,
+    "Soma de Tarifa Branca - Ponta": 1.13505,
+    "Soma de Tarifa Convencional": 0.63001,
+    "Efeito Médio Consumidor": 0.,
+    "UF": "PR"
+  },
+  {
+    "Distribuidora": "Celesc-DIS",
+    "Estado": "Santa Catarina",
+    "Região": "SUL",
+    "Sigla": "S",
+    "Soma de Tarifa Branca - Fora ponta": 0.50101,
+    "Soma de Tarifa Branca - Intermediária": 0.68511,
+    "Soma de Tarifa Branca - Ponta": 1.03176,
+    "Soma de Tarifa Convencional": 0.61791,
+    "Efeito Médio Consumidor": 0.,
+    "UF": "SC"
+  },
+  {
+    "Distribuidora": "Cooperaliança",
+    "Estado": "Santa Catarina",
+    "Região": "SUL",
+    "Sigla": "S",
+    "Soma de Tarifa Branca - Fora ponta": 0.50101,
+    "Soma de Tarifa Branca - Intermediária": 0.68511,
+    "Soma de Tarifa Branca - Ponta": 1.03176,
+    "Soma de Tarifa Convencional": 0.61791,
+    "Efeito Médio Consumidor": 0.,
+    "UF": "SC"
+  },
+  {
+    "Distribuidora": "Dcelt",
+    "Estado": "Santa Catarina",
+    "Região": "SUL",
+    "Sigla": "S",
+    "Soma de Tarifa Branca - Fora ponta": 0.50101,
+    "Soma de Tarifa Branca - Intermediária": 0.68511,
+    "Soma de Tarifa Branca - Ponta": 1.03176,
+    "Soma de Tarifa Convencional": 0.61791,
+    "Efeito Médio Consumidor": 0.,
+    "UF": "SC"
+  },
+  {
+    "Distribuidora": "EFLJC",
+    "Estado": "Santa Catarina",
+    "Região": "SUL",
+    "Sigla": "S",
+    "Soma de Tarifa Branca - Fora ponta": 0.50101,
+    "Soma de Tarifa Branca - Intermediária": 0.68511,
+    "Soma de Tarifa Branca - Ponta": 1.03176,
+    "Soma de Tarifa Convencional": 0.61791,
+    "Efeito Médio Consumidor": 0.,
+    "UF": "SC"
+  },
+  {
+    "Distribuidora": "Eflul",
+    "Estado": "Santa Catarina",
+    "Região": "SUL",
+    "Sigla": "S",
+    "Soma de Tarifa Branca - Fora ponta": 0.50101,
+    "Soma de Tarifa Branca - Intermediária": 0.68511,
+    "Soma de Tarifa Branca - Ponta": 1.03176,
+    "Soma de Tarifa Convencional": 0.5538,
+    "Efeito Médio Consumidor": 0.,
+    "UF": "SC"
+  },
+  {
+    "Distribuidora": "Amazonas Energia",
+    "Estado": "Amazonas",
+    "Região": "NORTE",
+    "Sigla": "N",
+    "Soma de Tarifa Branca - Fora ponta": 0,
+    "Soma de Tarifa Branca - Intermediária": 0,
+    "Soma de Tarifa Branca - Ponta": 0,
+    "Soma de Tarifa Convencional": 0.85722,
+    "Efeito Médio Consumidor": 0.,
+    "UF": "AM"
+  },
+            ];
+
+            const tableHeader = document.getElementById("tableHeader");
+            const tableBody = document.getElementById("tableBody");
+            if (data.length > 0) {
+                Object.keys(data[0]).forEach(key => {
+                    const th = document.createElement("th");
+                    th.textContent = key;
+                    tableHeader.appendChild(th);
+                });
+            }
+            data.forEach(row => {
+                const tr = document.createElement("tr");
+                Object.values(row).forEach(value => {
+                    const td = document.createElement("td");
+                    td.textContent = value;
+                    tr.appendChild(td);
+                });
+                tableBody.appendChild(tr);
+            });
+        });
+
+        function exportTableToExcel() {
+            const table = document.getElementById('rankingTable');
+            const workbook = XLSX.utils.table_to_book(table);
+            XLSX.writeFile(workbook, 'ranking_tarifas_energia.xlsx');
+        }
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.5/xlsx.full.min.js"></script>
+</body>
+</html>
